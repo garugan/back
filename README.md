@@ -1,98 +1,161 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Mogu API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS で作成した Mogu のバックエンド API です。
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 開発
 
 ```bash
-$ npm install
+npm install
+npm run start:dev
 ```
 
-## Compile and run the project
+標準では `http://localhost:3000` で起動します。
+
+## 環境変数
+
+`.env.example` をコピーして `.env` を作成します。
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+```env
+GOOGLE_PLACES_API_KEY=your_api_key_here
+DATABASE_URL="mysql://mogu:mogu_password@127.0.0.1:3306/mogu"
+SHADOW_DATABASE_URL="mysql://root:root_password@127.0.0.1:3306/mogu_shadow"
+JWT_SECRET="replace_with_a_long_random_secret"
+RECAPTCHA_SECRET_KEY="your_recaptcha_secret_key"
+RECAPTCHA_MIN_SCORE="0.5"
+```
+
+## MySQL / Prisma
+
+ローカルDBは Docker Compose の MySQL を使います。
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run db:up
+npm run prisma:migrate -- --name init
+npm run start:dev
 ```
 
-## Deployment
+既存データがあるローカルDBへ認証を追加した場合、migration で開発用ユーザーが作成されます。
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```txt
+email: local@example.com
+password: password123
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Prisma Client だけ再生成する場合:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run prisma:generate
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Google Places API 設定
 
-## Resources
+1. [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成、または既存プロジェクトを選択します。
+2. プロジェクトに請求先アカウントを紐づけます。
+3. Google Maps Platform の API ライブラリで `Places API` を有効化します。
+4. `認証情報` から API キーを作成します。
+5. 作成したキーの `API restrictions` を `Places API` のみに制限します。
+6. 本番環境では `Application restrictions` をサーバーの IP アドレスに制限します。ローカル開発中だけ一時的に未制限で使えます。
+7. API キーを `back/.env` の `GOOGLE_PLACES_API_KEY` に設定します。
 
-Check out a few resources that may come in handy when working with NestJS:
+## Google reCAPTCHA v3 設定
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. [reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/create) を開きます。
+2. Label に `Band Meshi Local` など分かる名前を入れます。
+3. reCAPTCHA type は `reCAPTCHA v3` を選びます。
+4. Domains にローカル用として `localhost` と `127.0.0.1` を追加します。本番では実ドメインも追加します。
+5. 作成後に表示される `Site Key` を `front/.env.local` の `VITE_RECAPTCHA_SITE_KEY` に設定します。
+6. `Secret Key` を `back/.env` の `RECAPTCHA_SECRET_KEY` に設定します。
+7. `RECAPTCHA_MIN_SCORE` は最初は `0.5` のままにして、運用後に Admin Console のスコア分布を見て調整します。
 
-## Support
+## API
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 店舗検索
 
-## Stay in touch
+```http
+GET /restaurants/search?q=渋谷 カフェ
+Authorization: Bearer <access_token>
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Google Places API の Text Search を使い、以下の形で返します。
 
-## License
+```json
+[
+  {
+    "id": "places/...",
+    "name": "店舗名",
+    "address": "住所",
+    "category": "カテゴリ"
+  }
+]
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### 登録済み店舗一覧
+
+```http
+GET /restaurants
+Authorization: Bearer <access_token>
+```
+
+### 店舗登録・更新
+
+```http
+POST /restaurants
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "id": "places/...",
+  "name": "店舗名",
+  "photo": "https://...",
+  "status": "visited",
+  "rating": 4,
+  "visitDate": "2026-05-30",
+  "memo": "",
+  "floor": "1F",
+  "elevator": "unknown",
+  "category": "カフェ",
+  "address": "東京都..."
+}
+```
+
+## 認証
+
+### 新規登録
+
+```http
+POST /auth/register
+Content-Type: application/json
+
+{
+  "email": "you@example.com",
+  "password": "password123",
+  "name": "表示名",
+  "recaptchaToken": "token_from_grecaptcha_execute"
+}
+```
+
+### ログイン
+
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "you@example.com",
+  "password": "password123",
+  "recaptchaToken": "token_from_grecaptcha_execute"
+}
+```
+
+レスポンスの `accessToken` を `Authorization: Bearer <accessToken>` として認証が必要なAPIに付けます。
+
+## 検証
+
+```bash
+npm run build
+npm test -- --runInBand
+```
