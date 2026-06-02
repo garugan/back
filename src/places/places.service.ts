@@ -6,7 +6,7 @@ export interface PlaceSearchResult {
   name: string;
   address: string;
   category: string;
-  photo?: string;
+  photoName?: string;
 }
 
 interface GoogleTextSearchResponse {
@@ -137,9 +137,19 @@ export class PlacesService {
         name: place.displayName!.text!,
         address: place.formattedAddress ?? '',
         category: place.primaryTypeDisplayName?.text ?? '飲食店',
-        photo: await this.getPhotoUri(place.photos?.[0]?.name, apiKey),
+        photoName: place.photos?.[0]?.name,
       })),
     );
+  }
+
+  async resolvePhotoUri(photoName: string | undefined) {
+    const apiKey = this.configService.get<string>('GOOGLE_PLACES_API_KEY');
+
+    if (!apiKey) {
+      throw new InternalServerErrorException('GOOGLE_PLACES_API_KEY is not configured');
+    }
+
+    return this.getPhotoUri(photoName, apiKey);
   }
 
   private async getPhotoUri(photoName: string | undefined, apiKey: string) {

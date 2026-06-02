@@ -99,31 +99,23 @@ describe('PlacesService', () => {
     );
   });
 
-  it('returns a photo uri when the place has a photo', async () => {
-    const fetchMock = jest
-      .spyOn(global, 'fetch')
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          places: [
-            {
-              id: 'places/cafe',
-              displayName: { text: 'テストカフェ' },
-              formattedAddress: '東京都渋谷区2-2-2',
-              primaryType: 'coffee_shop',
-              primaryTypeDisplayName: { text: 'コーヒーショップ' },
-              types: ['coffee_shop', 'cafe', 'food', 'establishment'],
-              photos: [{ name: 'places/cafe/photos/photo-1' }],
-            },
-          ],
-        }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          photoUri: 'https://lh3.googleusercontent.com/test-photo',
-        }),
-      } as Response);
+  it('returns photo metadata without fetching photo media during search', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        places: [
+          {
+            id: 'places/cafe',
+            displayName: { text: 'テストカフェ' },
+            formattedAddress: '東京都渋谷区2-2-2',
+            primaryType: 'coffee_shop',
+            primaryTypeDisplayName: { text: 'コーヒーショップ' },
+            types: ['coffee_shop', 'cafe', 'food', 'establishment'],
+            photos: [{ name: 'places/cafe/photos/photo-1' }],
+          },
+        ],
+      }),
+    } as Response);
 
     await expect(service.searchText('渋谷 カフェ')).resolves.toEqual([
       {
@@ -131,12 +123,12 @@ describe('PlacesService', () => {
         name: 'テストカフェ',
         address: '東京都渋谷区2-2-2',
         category: 'コーヒーショップ',
-        photo: 'https://lh3.googleusercontent.com/test-photo',
+        photoName: 'places/cafe/photos/photo-1',
       },
     ]);
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
       'https://places.googleapis.com/v1/places:searchText',
       expect.objectContaining({
         headers: expect.objectContaining({
@@ -144,9 +136,23 @@ describe('PlacesService', () => {
         }),
       }),
     );
-    expect(fetchMock.mock.calls[1][0].toString()).toContain(
+  });
+
+  it('fetches a photo uri for a selected place photo', async () => {
+    const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        photoUri: 'https://lh3.googleusercontent.com/test-photo',
+      }),
+    } as Response);
+
+    await expect(
+      service.resolvePhotoUri('places/cafe/photos/photo-1'),
+    ).resolves.toBe('https://lh3.googleusercontent.com/test-photo');
+
+    expect(fetchMock.mock.calls[0][0].toString()).toContain(
       'places.googleapis.com/v1/places/cafe/photos/photo-1/media',
     );
-    expect(fetchMock.mock.calls[1][0].toString()).toContain('skipHttpRedirect=true');
+    expect(fetchMock.mock.calls[0][0].toString()).toContain('skipHttpRedirect=true');
   });
 });

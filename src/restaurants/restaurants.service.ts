@@ -25,7 +25,10 @@ export class RestaurantsService {
   }
 
   async upsert(userId: string, data: UpsertRestaurantDto) {
-    const { id, ...rest } = data;
+    const { id, photoName, ...rest } = data;
+    const photo = photoName
+      ? await this.placesService.resolvePhotoUri(photoName)
+      : data.photo;
     const restaurant = await this.prisma.restaurant.upsert({
       where: {
         userId_placeId: {
@@ -35,10 +38,14 @@ export class RestaurantsService {
       },
       create: {
         ...rest,
+        photo,
         placeId: id,
         userId,
       },
-      update: rest,
+      update: {
+        ...rest,
+        photo,
+      },
     });
 
     return this.toResponse(restaurant);

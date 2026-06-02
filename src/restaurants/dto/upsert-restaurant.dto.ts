@@ -2,6 +2,7 @@ export class UpsertRestaurantDto {
   id!: string;
   name!: string;
   photo?: string;
+  photoName?: string;
   status!: 'visited' | 'want';
   rating!: number;
   visitDate?: string;

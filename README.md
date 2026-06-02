@@ -71,6 +71,43 @@ npm run prisma:generate
 6. `Secret Key` を `back/.env` の `RECAPTCHA_SECRET_KEY` に設定します。
 7. `RECAPTCHA_MIN_SCORE` は最初は `0.5` のままにして、運用後に Admin Console のスコア分布を見て調整します。
 
+## Google 関連 API 料金目安
+
+2026-05-31 時点の公式料金を元にした目安です。Google の料金は変更される可能性があるため、本番前に公式ページも確認してください。
+
+現状の実装では、検索時は `Places API Text Search` だけを呼び、写真は取得しません。店舗を登録するときに、選択された1店舗分だけ `Places API Place Details Photos` で写真URLを取得します。
+
+| 用途 | Google API / SKU | 無料枠/月 | 超過後の単価 |
+| --- | --- | ---: | ---: |
+| 店舗検索 | Places API Text Search Pro | 5,000回 | $32 / 1,000回 |
+| 登録時の写真取得 | Places API Place Details Photos | 1,000回 | $7 / 1,000回 |
+| ログイン/登録のBot対策 | reCAPTCHA | 10,000 assessments | 10,001-100,000は月$8、以降 $1 / 1,000 |
+
+検索結果が10件や20件返ってきても、Text Search の課金カウントは検索API呼び出し1回です。ただし、入力中に複数回検索APIが呼ばれた場合は、その回数分カウントされます。
+
+概算式:
+
+```txt
+検索コスト = max(0, 検索回数 - 5,000) * $0.032
+写真コスト = max(0, 登録件数 - 1,000) * $0.007
+reCAPTCHA = 10,000回まで無料、10,001-100,000回は月$8
+```
+
+例:
+
+| 月間利用 | 概算 |
+| --- | ---: |
+| 検索1,000回 / 登録300件 / 認証2,000回 | $0 |
+| 検索5,000回 / 登録1,000件 / 認証10,000回 | $0 |
+| 検索10,000回 / 登録2,000件 / 認証20,000回 | 約 $175/月 |
+| 検索20,000回 / 登録5,000件 / 認証50,000回 | 約 $516/月 |
+
+参照:
+
+- [Google Maps Platform pricing](https://developers.google.cn/maps/billing-and-pricing/pricing?hl=en)
+- [Place Data Fields](https://developers.google.com/maps/documentation/places/web-service/data-fields)
+- [reCAPTCHA billing](https://cloud.google.com/recaptcha/docs/billing-information)
+
 ## API
 
 ### 店舗検索
@@ -88,7 +125,8 @@ Google Places API の Text Search を使い、以下の形で返します。
     "id": "places/...",
     "name": "店舗名",
     "address": "住所",
-    "category": "カテゴリ"
+    "category": "カテゴリ",
+    "photoName": "places/.../photos/..."
   }
 ]
 ```
@@ -110,7 +148,7 @@ Content-Type: application/json
 {
   "id": "places/...",
   "name": "店舗名",
-  "photo": "https://...",
+  "photoName": "places/.../photos/...",
   "status": "visited",
   "rating": 4,
   "visitDate": "2026-05-30",
