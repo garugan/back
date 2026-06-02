@@ -18,6 +18,10 @@ export class RecaptchaService {
   constructor(private readonly configService: ConfigService) {}
 
   async verify(token: string | undefined, expectedAction: string) {
+    if (!this.isEnabled()) {
+      return;
+    }
+
     const secret = this.configService.get<string>('RECAPTCHA_SECRET_KEY');
     const minScore = Number(this.configService.get<string>('RECAPTCHA_MIN_SCORE') ?? 0.5);
 
@@ -55,5 +59,15 @@ export class RecaptchaService {
     if (typeof data.score === 'number' && data.score < minScore) {
       throw new UnauthorizedException('Low reCAPTCHA score');
     }
+  }
+
+  private isEnabled() {
+    const configuredValue = this.configService.get<string>('RECAPTCHA_ENABLED');
+
+    if (configuredValue === undefined) {
+      return process.env.NODE_ENV === 'production';
+    }
+
+    return configuredValue.toLowerCase() === 'true';
   }
 }

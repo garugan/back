@@ -24,9 +24,13 @@ GOOGLE_PLACES_API_KEY=your_api_key_here
 DATABASE_URL="mysql://mogu:mogu_password@127.0.0.1:3306/mogu"
 SHADOW_DATABASE_URL="mysql://root:root_password@127.0.0.1:3306/mogu_shadow"
 JWT_SECRET="replace_with_a_long_random_secret"
+RECAPTCHA_ENABLED="false"
 RECAPTCHA_SECRET_KEY="your_recaptcha_secret_key"
 RECAPTCHA_MIN_SCORE="0.5"
 ```
+
+`RECAPTCHA_ENABLED="false"` の場合、ログイン/新規登録時の reCAPTCHA 検証はスキップされます。
+本番では `true` にして、`RECAPTCHA_SECRET_KEY` を設定します。
 
 ## MySQL / Prisma
 
@@ -62,6 +66,9 @@ npm run prisma:generate
 7. API キーを `back/.env` の `GOOGLE_PLACES_API_KEY` に設定します。
 
 ## Google reCAPTCHA v3 設定
+
+ローカル開発では `front/.env.local` の `VITE_RECAPTCHA_ENABLED=false` と `back/.env` の `RECAPTCHA_ENABLED="false"` で無効化できます。
+本番で有効化する場合は以下を設定します。
 
 1. [reCAPTCHA Admin Console](https://www.google.com/recaptcha/admin/create) を開きます。
 2. Label に `Band Meshi Local` など分かる名前を入れます。
