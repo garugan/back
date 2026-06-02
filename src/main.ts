@@ -8,7 +8,7 @@ async function bootstrap() {
     origin: [
       /^http:\/\/localhost:\d+$/,
       /^http:\/\/127\.0\.0\.1:\d+$/,
-      'https://あなたの-vercel-url.vercel.app',
+      'https://front-ten-sigma.vercel.app/',
     ],
   });
 
